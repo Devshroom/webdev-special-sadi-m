@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login</title>
+    <script>
+        function handleAdminLogin(event) {
+            event.preventDefault();
+            const username = document.getElementById('admin-username').value;
+            const password = document.getElementById('admin-password').value;
+
+            fetch('admin_login.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: `username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = 'admin.html';
+                } else {
+                    alert('Invalid admin credentials.');
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+    </script>
+</head>
+<body>
+    <h1>Admin Login</h1>
+    <form onsubmit="handleAdminLogin(event)">
+        <label for="admin-username">Admin Username:</label>
+        <input type="text" id="admin-username" required>
+        <br>
+        <label for="admin-password">Admin Password:</label>
+        <input type="password" id="admin-password" required>
+        <br>
+        <button type="submit">Login</button>
+    </form>
+</body>
+</html>

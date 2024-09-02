@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Page - Player Details</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        table { border-collapse: collapse; width: 60%; margin: 50px auto; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+        th { background-color: #f2f2f2; }
+        select, input[type="text"], button { padding: 5px; margin-right: 5px; }
+        .controls-container { text-align: center; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <h2 style="text-align:center;">Player Details</h2>
+    <div class="controls-container">
+        <label for="search-ids">Search by IDs: </label>
+        <input type="text" id="search-ids" placeholder="Enter IDs separated by commas" oninput="fetchAndDisplayPlayers()">
+        <label for="sort-role">Sort by Role: </label>
+        <select id="sort-role" onchange="fetchAndDisplayPlayers()">
+            <option value="all">All</option>
+            <option value="active">Player1 and Player2</option>
+            <option value="waiting">Waiting</option>
+        </select>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Username</th>
+                <th>Role</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody id="player-list">
+            <!-- Player IDs, usernames, and roles will be inserted here by JavaScript -->
+        </tbody>
+    </table>
+
+    <script>
+        // Fetch and display player details based on selected sort option and search query
+        function fetchAndDisplayPlayers() {
+            const sortRole = document.getElementById('sort-role').value;
+            const searchIds = document.getElementById('search-ids').value;
+            fetch('fetch_players.php?sort_role=' + sortRole + '&search_ids=' + searchIds)
+                .then(response => response.json())
+                .then(data => {
+                    const playerList = document.getElementById('player-list');
+                    playerList.innerHTML = ''; // Clear the table before inserting new rows
+                    data.forEach(player => {
+                        const row = document.createElement('tr');
+
+                        const idCell = document.createElement('td');
+                        idCell.textContent = player.id;
+                        row.appendChild(idCell);
+
+                        const usernameCell = document.createElement('td');
+                        usernameCell.textContent = player.username;
+                        row.appendChild(usernameCell);
+
+                        const roleCell = document.createElement('td');
+                        const select = document.createElement('select');
+                        select.innerHTML = `
+                            <option value="1" ${player.role === 'player1' ? 'selected' : ''}>player1</option>
+                            <option value="2" ${player.role === 'player2' ? 'selected' : ''}>player2</option>
+                            <option value="3" ${player.role === 'waiting' ? 'selected' : ''}>waiting</option>
+                        `;
+                        roleCell.appendChild(select);
+                        row.appendChild(roleCell);
+
+                        const actionCell = document.createElement('td');
+                        const button = document.createElement('button');
+                        button.textContent = 'Update Role';
+                        button.onclick = function() {
+                            updateRole(player.id, select.value);
+                        };
+                        actionCell.appendChild(button);
+                        row.appendChild(actionCell);
+
+                        playerList.appendChild(row);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error fetching player data:', error);
+                });
+        }
+
+        // Function to update the player's role
+        function updateRole(playerId, roleId) {
+            fetch('update_role.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ id: playerId, role_id: roleId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Role updated successfully!');
+                    fetchAndDisplayPlayers(); // Refresh the list after updating
+                } else {
+                    alert('Failed to update role.');
+                }
+            })
+            .catch(error => {
+                console.error('Error updating role:', error);
+            });
+        }
+
+        // Initial fetch and display of players
+        fetchAndDisplayPlayers();
+    </script>
+</body>
+</html>
